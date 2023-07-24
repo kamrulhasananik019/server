@@ -34,6 +34,7 @@ async function run() {
         const usersCollection = client.db('Enroll').collection("users");
         const collageInfo = client.db('Enroll').collection("collageInfo");
         const Enrolls = client.db('Enroll').collection("enrolls");
+        const Reviews = client.db('Enroll').collection("reviews");
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -59,7 +60,27 @@ async function run() {
             res.send(result);
         });
 
-
+        app.patch('/updateUser/:email', async (req, res) => {
+            const email = req.params.email;
+            const filter = { email: email };
+            const options = { upsert: true };
+            const update = req.body;
+            const add = {
+                $set: {
+                    name: update.name,
+                    email: update.email,
+                    address: update.address,
+                    collegeName: update.collegeName,
+                }
+            };
+            try {
+                const result = await usersCollection.updateOne(filter, add, options);
+                res.json({ success: true, message: 'Enrollment added successfully.' });
+            } catch (error) {
+                console.error('Error while updating enrollment:', error);
+                res.status(500).json({ success: false, message: 'An error occurred while updating enrollment.' });
+            }
+        })
 
         app.patch('/enrolluser/:email', async (req, res) => {
             const email = req.params.email;
@@ -72,7 +93,6 @@ async function run() {
                     email: update.email,
                     photoURL: update.photoURL,
                     date: update.date,
-                    picture: update.picture,
                     subject: update.subject,
                     address: update.address,
                     collegeName: update.collegeName,
@@ -87,7 +107,7 @@ async function run() {
                     sports: update.sports
                 }
             };
-        
+
             try {
                 const result = await usersCollection.updateOne(filter, add, options);
                 res.json({ success: true, message: 'Enrollment added successfully.' });
@@ -96,9 +116,9 @@ async function run() {
                 res.status(500).json({ success: false, message: 'An error occurred while updating enrollment.' });
             }
         });
-        
 
-    
+
+
         app.get('/collages', async (req, res) => {
             const result = await collageInfo.find().toArray()
             res.send(result);
@@ -134,6 +154,18 @@ async function run() {
             const email = req.params.email;
             const filter = { email: email }
             const result = await Enrolls.findOne(filter);
+            res.send(result)
+        })
+
+
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            const result = await Reviews.insertOne(review)
+            res.send(result)
+        })
+
+        app.get('/showAllReviews', async (req, res) => {
+            const result = await Reviews.find().toArray();
             res.send(result)
         })
 
